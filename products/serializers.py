@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, Review
+from .models import Category, Product, Review, Banner, InstagramImage
 
 class CategorySerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
@@ -52,3 +52,13 @@ class ProductSerializer(serializers.ModelSerializer):
         if reviews.exists():
             return sum([r.rating for r in reviews]) / reviews.count()
         return 0
+
+class BannerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Banner
+        fields = '__all__'
+
+class InstagramImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InstagramImage
+        fields = '__all__'

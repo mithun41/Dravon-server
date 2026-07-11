@@ -2,8 +2,8 @@ from rest_framework import viewsets, filters
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser
-from .models import Category, Product, Review
-from .serializers import CategorySerializer, ProductSerializer, ReviewSerializer
+from .models import Category, Product, Review, Banner, InstagramImage
+from .serializers import CategorySerializer, ProductSerializer, ReviewSerializer, BannerSerializer, InstagramImageSerializer
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 12
@@ -54,3 +54,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, status='pending')
+
+class BannerViewSet(viewsets.ModelViewSet):
+    queryset = Banner.objects.all().order_by('-created_at')
+    serializer_class = BannerSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    
+    def get_queryset(self):
+        if self.request.user and self.request.user.is_authenticated and self.request.user.is_staff:
+            return Banner.objects.all().order_by('-created_at')
+        return Banner.objects.filter(is_active=True).order_by('-created_at')
+
+class InstagramImageViewSet(viewsets.ModelViewSet):
+    queryset = InstagramImage.objects.all().order_by('-created_at')
+    serializer_class = InstagramImageSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]

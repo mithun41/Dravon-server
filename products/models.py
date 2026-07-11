@@ -71,3 +71,26 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user} review for {self.product.name}"
+
+class Banner(models.Model):
+    badge_name = models.CharField(max_length=100, blank=True)
+    title = models.CharField(max_length=255)
+    subtitle = models.TextField(blank=True)
+    button_1_text = models.CharField(max_length=100, blank=True)
+    button_1_link = models.CharField(max_length=255, blank=True)
+    button_2_text = models.CharField(max_length=100, blank=True)
+    button_2_link = models.CharField(max_length=255, blank=True)
+    image = models.ImageField(upload_to='banners/', max_length=500)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+class InstagramImage(models.Model):
+    image = models.ImageField(upload_to='instagram/', max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Instagram Image {self.id}"
