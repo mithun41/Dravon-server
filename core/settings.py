@@ -147,7 +147,9 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://gym-accessories-gamma.vercel.app",  # আপনার Vercel লিংকটি যুক্ত করুন
 ]
+
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
