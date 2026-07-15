@@ -14,9 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path, include
-from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+import django.urls
 import django.urls.converters
 
 _original_register_converter = django.urls.converters.register_converter
@@ -30,7 +28,13 @@ def _safe_register_converter(converter, type_name):
         else:
             raise
 
+django.urls.register_converter = _safe_register_converter
 django.urls.converters.register_converter = _safe_register_converter
+
+from django.contrib import admin
+from django.urls import path, include
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
