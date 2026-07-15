@@ -17,6 +17,20 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+import django.urls.converters
+
+_original_register_converter = django.urls.converters.register_converter
+
+def _safe_register_converter(converter, type_name):
+    try:
+        _original_register_converter(converter, type_name)
+    except ValueError as e:
+        if "is already registered" in str(e):
+            pass
+        else:
+            raise
+
+django.urls.converters.register_converter = _safe_register_converter
 
 urlpatterns = [
     path('admin/', admin.site.urls),
