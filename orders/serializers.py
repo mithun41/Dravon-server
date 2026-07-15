@@ -14,12 +14,12 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'product_id', 'product_name', 'price', 'quantity']
+        fields = ['id', 'product', 'product_id', 'product_name', 'price', 'quantity', 'size']
         read_only_fields = ['product']
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    
     
     class Meta:
         model = Order
@@ -28,7 +28,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'address', 'city', 'payment_method', 'status', 
             'total_amount', 'delivery_charge', 'created_at', 'updated_at', 'items'
         ]
-        read_only_fields = ['order_number', 'status', 'total_amount', 'delivery_charge', 'created_at', 'updated_at']
+        read_only_fields = ['order_number', 'status', 'total_amount', 'delivery_charge', 'created_at', 'updated_at', 'user']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -65,11 +65,14 @@ class OrderSerializer(serializers.ModelSerializer):
             quantity = item_data['quantity']
             price = product.price # Price at time of purchase
             
+            size = item_data.get('size', None)
+            
             OrderItem.objects.create(
                 order=order,
                 product=product,
                 price=price,
-                quantity=quantity
+                quantity=quantity,
+                size=size
             )
             
             total_amount += (price * quantity)

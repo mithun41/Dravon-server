@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'products',
     'orders',
     'users',
+    'contacts',
     'rest_framework',
     'django_filters',
     'corsheaders',
@@ -169,5 +170,6 @@ SPECTACULAR_SETTINGS = {
         {'name': 'reviews', 'description': 'Reviews Management'},
         {'name': 'orders', 'description': 'Orders Management'},
         {'name': 'cart', 'description': 'Cart Management'},
+        {'name': 'contacts', 'description': 'Contact Messages'},
     ],
 }

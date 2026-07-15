@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import Category, Product, Review, Banner, InstagramImage
+from .models import Category, Product, Review, Banner, InstagramImage, Size
+
+@admin.register(Size)
+class SizeAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):

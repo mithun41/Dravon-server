@@ -15,7 +15,14 @@ class OrderPagination(PageNumberPagination):
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_permissions(self):
+        if self.action == 'create':
+            return [permissions.AllowAny()]
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [permissions.IsAdminUser()]
+        return [permissions.IsAuthenticated()]
+
     pagination_class = OrderPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['status', 'payment_method']
@@ -54,7 +61,8 @@ class OrderViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        user = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(user=user)
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -323,3 +331,20 @@ class StoreSettingView(APIView):
 
     def put(self, request):
         return self.patch(request)
+
+class TrackOrderView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        order_number = request.data.get('order_number')
+        phone = request.data.get('phone')
+        
+        if not order_number or not phone:
+            return Response({"error": "Order number and phone are required."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        order = Order.objects.filter(order_number=order_number, phone=phone).first()
+        if not order:
+            return Response({"error": "Order not found with provided details."}, status=status.HTTP_404_NOT_FOUND)
+            
+        serializer = OrderSerializer(order)
+        return Response(serializer.data)
