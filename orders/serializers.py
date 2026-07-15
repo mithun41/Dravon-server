@@ -127,4 +127,4 @@ class CartSerializer(serializers.ModelSerializer):
 class StoreSettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = StoreSetting
-        fields = ['delivery_charge_inside_dhaka', 'delivery_charge_outside_dhaka', 'updated_at']
+        fields = ['delivery_charge_inside_dhaka', 'delivery_charge_outside_dhaka', 'youtube_video_id', 'updated_at']

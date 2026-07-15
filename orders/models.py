@@ -111,6 +111,7 @@ class CartItem(models.Model):
 class StoreSetting(models.Model):
     delivery_charge_inside_dhaka = models.DecimalField(max_digits=10, decimal_places=2, default=60.00)
     delivery_charge_outside_dhaka = models.DecimalField(max_digits=10, decimal_places=2, default=120.00)
+    youtube_video_id = models.CharField(max_length=50, blank=True, null=True, default="7wtfhZwyrcc")
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):

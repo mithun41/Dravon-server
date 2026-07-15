@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+import random
+from django.utils import timezone
+from datetime import timedelta
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -36,3 +39,19 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+class PasswordResetOTP(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_otps')
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_verified = models.BooleanField(default=False)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=10)
+
+    @classmethod
+    def generate_otp(cls, user):
+        otp_code = f"{random.randint(100000, 999999)}"
+        cls.objects.filter(user=user, is_verified=False).delete()
+        return cls.objects.create(user=user, otp=otp_code)
+
