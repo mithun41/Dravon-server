@@ -118,4 +118,56 @@ class ResetPasswordView(generics.GenericAPIView):
         
         return Response({"message": "Password reset successfully."}, status=status.HTTP_200_OK)
 
+from rest_framework.views import APIView
+from orders.models import Order
+from django.db.models import Count
 
+class CustomerDashboardView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        
+        # 1. User Profile
+        user_data = {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "phone_number": user.phone_number,
+            "profile_pic": request.build_absolute_uri(user.profile_pic.url) if user.profile_pic else None
+        }
+        
+        # 2. Order Statistics
+        orders = Order.objects.filter(user=user)
+        total_orders = orders.count()
+        
+        status_counts = orders.values('status').annotate(count=Count('status'))
+        order_summary = {
+            "total_orders": total_orders,
+            "pending": 0,
+            "processing": 0,
+            "shipped": 0,
+            "delivered": 0,
+            "cancelled": 0
+        }
+        for item in status_counts:
+            status = item['status'].lower()
+            if status in order_summary:
+                order_summary[status] = item['count']
+                
+        # 3. Recent Orders
+        recent_orders = orders.order_by('-created_at')[:5]
+        recent_orders_data = [
+            {
+                "order_number": o.order_number,
+                "status": o.status,
+                "total_amount": o.total_amount,
+                "created_at": o.created_at
+            } for o in recent_orders
+        ]
+        
+        return Response({
+            "user": user_data,
+            "order_summary": order_summary,
+            "recent_orders": recent_orders_data
+        })
