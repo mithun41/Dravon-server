@@ -67,6 +67,22 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    def update_total_stock(self):
+        if self.size_stocks.exists():
+            self.stock = sum(ss.stock for ss in self.size_stocks.all())
+            self.save(update_fields=['stock'])
+
+class ProductSizeStock(models.Model):
+    product = models.ForeignKey(Product, related_name='size_stocks', on_delete=models.CASCADE)
+    size = models.ForeignKey(Size, related_name='product_stocks', on_delete=models.CASCADE)
+    stock = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ('product', 'size')
+
+    def __str__(self):
+        return f"{self.product.name} - {self.size.name}: {self.stock}"
+
 class Review(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),

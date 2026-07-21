@@ -8,11 +8,20 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['id', 'order_number', 'user', 'name', 'status', 'total_amount', 'created_at']
-    list_filter = ['status', 'created_at']
-    search_fields = ['order_number', 'name', 'email', 'phone', 'user__name', 'user__email']
+    list_display = ['id', 'order_number', 'user', 'name', 'payment_method', 'status', 'total_amount', 'created_at']
+    list_filter = ['status', 'payment_method', 'created_at']
+    search_fields = ['order_number', 'name', 'email', 'phone', 'sender_number', 'transaction_id', 'user__name', 'user__email']
     inlines = [OrderItemInline]
     readonly_fields = ['total_amount']
+    
+    fieldsets = (
+        ('Order Info', {
+            'fields': ('order_number', 'user', 'name', 'email', 'phone', 'address', 'city', 'status')
+        }),
+        ('Payment Info', {
+            'fields': ('payment_method', 'sender_number', 'transaction_id', 'total_amount', 'delivery_charge')
+        }),
+    )
 
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)

@@ -1,10 +1,17 @@
 from rest_framework import serializers
-from .models import Category, Product, Review, Banner, InstagramImage, Size
+from .models import Category, Product, Review, Banner, InstagramImage, Size, ProductSizeStock
 
 class SizeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Size
         fields = ['id', 'name']
+
+class ProductSizeStockSerializer(serializers.ModelSerializer):
+    size_name = serializers.CharField(source='size.name', read_only=True)
+
+    class Meta:
+        model = ProductSizeStock
+        fields = ['id', 'size', 'size_name', 'stock']
 
 class CategorySerializer(serializers.ModelSerializer):
     subcategories = serializers.SerializerMethodField()
@@ -36,6 +43,7 @@ class ProductSerializer(serializers.ModelSerializer):
         queryset=Category.objects.all(), source='category', required=False, allow_null=True
     )
     sizes = SizeSerializer(many=True, read_only=True)
+    size_stocks = ProductSizeStockSerializer(many=True, read_only=True)
     size_names = serializers.CharField(write_only=True, required=False, allow_blank=True)
     reviews = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
@@ -50,7 +58,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'id', 'category', 'category_id', 'name', 'slug', 'short_description', 'description',
             'purchase_price', 'selling_price', 'offer_price', 'price',
             'image_1', 'image_2', 'image_3', 'image_4', 'image_5', 'stock', 'sold_quantity',
-            'sizes', 'size_names', 'expire_date', 'created_at', 'updated_at', 'reviews', 'average_rating'
+            'sizes', 'size_stocks', 'size_names', 'expire_date', 'created_at', 'updated_at', 'reviews', 'average_rating'
         ]
         read_only_fields = ['price']
         
@@ -71,14 +79,44 @@ class ProductSerializer(serializers.ModelSerializer):
     def _set_sizes(self, product, size_names_str):
         if not size_names_str.strip():
             product.sizes.clear()
+            product.size_stocks.all().delete()
             return
             
-        names = [n.strip().upper() for n in size_names_str.split(',') if n.strip()]
+        tokens = [n.strip() for n in size_names_str.split(',') if n.strip()]
         size_objs = []
-        for name in names:
+        
+        # Track valid sizes to clear old removed sizes
+        valid_size_ids = set()
+
+        for token in tokens:
+            has_explicit_stock = ':' in token
+            if has_explicit_stock:
+                parts = token.split(':')
+                name = parts[0].strip().upper()
+                try:
+                    stock_qty = int(parts[1].strip())
+                except ValueError:
+                    stock_qty = 0
+            else:
+                name = token.strip().upper()
+                stock_qty = 0
+
             size_obj, _ = Size.objects.get_or_create(name=name)
             size_objs.append(size_obj)
+            valid_size_ids.add(size_obj.id)
+
+            size_stock_obj, created = ProductSizeStock.objects.get_or_create(
+                product=product, size=size_obj,
+                defaults={'stock': stock_qty}
+            )
+            if has_explicit_stock:
+                size_stock_obj.stock = stock_qty
+                size_stock_obj.save()
+
         product.sizes.set(size_objs)
+        # Delete size stocks for sizes no longer selected
+        product.size_stocks.exclude(size_id__in=valid_size_ids).delete()
+        product.update_total_stock()
 
     def get_average_rating(self, obj):
         reviews = obj.reviews.filter(status='approved')

@@ -7,6 +7,7 @@ from .models import StoreSetting
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
+    product_image = serializers.ImageField(source='product.image_1', read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(), source='product', write_only=True
     )
@@ -14,7 +15,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'product_id', 'product_name', 'price', 'quantity', 'size']
+        fields = ['id', 'product', 'product_id', 'product_name', 'product_image', 'price', 'quantity', 'size']
         read_only_fields = ['product']
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -25,7 +26,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             'id', 'order_number', 'user', 'name', 'email', 'phone', 
-            'address', 'city', 'payment_method', 'status', 
+            'address', 'city', 'payment_method', 'sender_number', 'transaction_id', 'status', 
             'total_amount', 'delivery_charge', 'created_at', 'updated_at', 'items'
         ]
         read_only_fields = ['order_number', 'status', 'total_amount', 'delivery_charge', 'created_at', 'updated_at', 'user']
@@ -45,7 +46,19 @@ class OrderSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             product = item_data['product']
             quantity = item_data['quantity']
-            if product.stock < quantity:
+            size_name = item_data.get('size', None)
+            
+            if size_name:
+                size_stock = product.size_stocks.filter(size__name__iexact=size_name.strip()).first()
+                if size_stock and size_stock.stock < quantity:
+                    raise serializers.ValidationError(
+                        f"Not enough stock for {product.name} (Size: {size_name.upper()}). Available: {size_stock.stock}"
+                    )
+                elif not size_stock and product.stock < quantity:
+                    raise serializers.ValidationError(
+                        f"Not enough stock for {product.name}. Available: {product.stock}"
+                    )
+            elif product.stock < quantity:
                 raise serializers.ValidationError(
                     f"Not enough stock for {product.name}. Available: {product.stock}"
                 )
@@ -127,4 +140,4 @@ class CartSerializer(serializers.ModelSerializer):
 class StoreSettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = StoreSetting
-        fields = ['delivery_charge_inside_dhaka', 'delivery_charge_outside_dhaka', 'youtube_video_id', 'updated_at']
+        fields = ['delivery_charge_inside_dhaka', 'delivery_charge_outside_dhaka', 'youtube_video_id', 'bkash_number', 'nagad_number', 'updated_at']
