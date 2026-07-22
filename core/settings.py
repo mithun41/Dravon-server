@@ -148,13 +148,17 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://gym-accessories-gamma.vercel.app",  # আপনার Vercel লিংকটি যুক্ত করুন
+    "https://gym-accessories-gamma.vercel.app",
+    "https://www.dravonfit.com",
+    "https://dravonfit.com",
 ]
-
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://gym-accessories-gamma.vercel.app",
+    "https://www.dravonfit.com",
+    "https://dravonfit.com",
 ]
 
 SPECTACULAR_SETTINGS = {
